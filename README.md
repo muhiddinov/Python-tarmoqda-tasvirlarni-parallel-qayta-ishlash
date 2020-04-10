@@ -2,6 +2,7 @@
 Python dasturlash tilida tasvirlardan obyektlarni tanib olishga mo'ljallangan tarmoqda tasvirlarni parallel qayta ishlash dasturi.
 
 Python dasturlash tili uchun kerakli uskunalar:
+    
     -> pyzmq
     -> opencv-python
     -> opencv-contrib-python
