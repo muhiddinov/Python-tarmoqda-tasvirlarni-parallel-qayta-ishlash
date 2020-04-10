@@ -1,7 +1,7 @@
 # Python tarmoqda tasvirlarni parallel qayta ishlash
 Python dasturlash tilida tasvirlardan obyektlarni tanib olishga mo'ljallangan tarmoqda tasvirlarni parallel qayta ishlash dasturi.
 
-Python dasturlash tili uchun kerakli uskunalar:
+Python dasturlash tili uchun kerakli kutubxonalar:
     
     -> pyzmq
     -> opencv-python
