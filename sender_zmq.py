@@ -7,8 +7,14 @@ import numpy as np
 
 img = cv2.imread('rpi1.jpg')
 
-imgsender = imagezmq.ImageSender(connect_to='tcp://192.168.43.83:2345', REQ_REP=True)
-imgreader = imagezmq.ImageHub(open_port='tcp://*:21567', REQ_REP=True)
+ADDR = '*'
+PORT = 3234
+
+SERVER_ADDR = 'localhost'   # Bu yerga server_hub_zmq.py ishga tushurilgan kompyuter ip manzili kiritilsin.
+SERVER_PORT = 2345
+
+imgsender = imagezmq.ImageSender(connect_to='tcp://{}:{}'.format(SERVER_ADDR, SERVER_PORT), REQ_REP=True)
+imgreader = imagezmq.ImageHub(open_port='tcp://{}:{}'.format(ADDR, PORT), REQ_REP=True)
 dev_name = socket.gethostname()
 dev_addr = socket.gethostbyname(dev_name)
 
@@ -31,15 +37,19 @@ ACTIVE_CHECK_SECONDS = ESTIMATED_NUM_PIS * ACTIVE_CHECK_PERIOD
 
 print("[INFO] detecting: {}...".format(", ".join(obj for obj in CONSIDER)))
 
-print('{}: {}'.format(dev_name, dev_addr))
+data_addr = dev_addr + ':' + str(PORT)
+print('{}: {}'.format(dev_name, data_addr))
+imgsender.send_image(data_addr, img)
 
-imgsender.send_image(dev_addr, img)
+k = 0
 
 while True:
     data, frame = imgreader.recv_image()
     imgreader.send_reply()
-    
+    k = k + 1
+    print ('{} - from ImageHub'.format(k))
     if data == 'exit':
+        imgsender.send_image('exit', frame)
         break
     
     frame = imutils.resize(frame, width=400)
