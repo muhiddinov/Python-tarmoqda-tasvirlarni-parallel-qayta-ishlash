@@ -4,8 +4,11 @@ import socket
 import time
 from threading import Thread, Lock
 
-imgHub = imagezmq.ImageHub(open_port='tcp://*:2345', REQ_REP=True)
-print('Create server: tcp://{}:2345'.format(socket.gethostbyname(socket.gethostname())))
+ADDR = '*'      # mana shu dastur ishga tushirilayotgan kompyuter ip manzili kiritiladi
+PORT = 2345
+
+imgHub = imagezmq.ImageHub(open_port='tcp://*:2345'.format(PORT), REQ_REP=True)
+print('Create server: tcp://{}:{}'.format(socket.gethostbyname(socket.gethostname()), PORT))
 
 capture = cv2.VideoCapture(0)
 dev_name = socket.gethostname()
@@ -17,7 +20,6 @@ clist = []
 
 while True:
     data, img = imgHub.recv_image()
-    print (data)
     imgHub.send_reply()
 
     if len(clist) == 0:
@@ -34,31 +36,29 @@ Imagesenders = []
 
 for cli in clist:
     print('\t->{}'.format(cli))
-    Imagesenders.append(imagezmq.ImageSender('tcp://{}:21567'.format(cli)))
+    Imagesenders.append(imagezmq.ImageSender('tcp://{}'.format(cli)))
 
 print ('Connected {} devices: {}'.format(len(clist), len(Imagesenders)))
 
 for k in range(len(clist)):    
-    print ('Sender[{}]: %s'.format(k), Imagesenders[k].get_info())
-
-
-print ('Have been sended message and image')
-
-img2sender = None
+    print ('Sender[{}]: '.format(k), Imagesenders[k].get_info())
 
 def view_recvs ():
     print ('Start thread.')
     k = 0
     while True:
+        start = time.time()
         (name, frame) = imgHub.recv_image()
         imgHub.send_reply(b'OK')
+        if (name == 'exit'):
+            break
         k = k + 1
-        print ('{}: Read from <<< {}.'.format(k, name))
-        cv2.imshow('Image parallel processing on network', frame)
-
+        end = time.time()
+        fps = round(1.0 / (end - start), 2)
+        print ('{}: Read from <<< {}. {} fps'.format(k, name, fps))
+        cv2.imshow('From network', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
     cv2.destroyAllWindows()
 
 def main():
@@ -71,10 +71,9 @@ def main():
         Imagesenders[sender_m].send_image(dev_name, img)
         sender_m = sender_m + 1
         sender_m = sender_m % SENDERS_COUNT
-    for k in range (SENDERS_COUNT):
-        print ('Send (exit) message to sender: {}'.format(Imagesenders[k].get_info()))
+
     print ('Shutting down...')
-    thread1._stop()
+    capture.release()
 
 if __name__ == "__main__":
     main()
